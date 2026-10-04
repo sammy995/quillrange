@@ -1,15 +1,17 @@
-# Contributing to Fiduciary
+# Contributing to Quillrange
 
-Thanks for helping build a benchmark serious institutions can trust. Fiduciary
-is a **social system disguised as a technical system** — its value comes from
-transparency, reproducibility, and domain rigor. Contributions are judged
-against that bar.
+Thanks for helping build a benchmark serious institutions can trust. Quillrange
+(Python package still `fiduciary` this cycle) is a **social system disguised as
+a technical system** — its value comes from transparency, reproducibility, and
+domain rigor. Contributions are judged against that bar.
+
+Clone: `https://github.com/sammy995/quillrange.git`
 
 ## The most valuable contribution: scenarios
 
 If you have **banking, compliance, risk, audit, or financial-regulation**
 experience, authoring scenarios is where you add the most. A scenario drops a
-model into a role inside TrustBank and defines what good behavior looks like.
+model into a role inside Rookvale and defines what good behavior looks like.
 
 ### Anatomy of a scenario
 

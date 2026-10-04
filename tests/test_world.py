@@ -5,7 +5,7 @@ from fiduciary.world import load_world, make_manifest, parse_front_matter, verif
 
 ORG = """\
 version: "0.1.0"
-bank_name: TrustBank
+bank_name: Rookvale
 divisions: [Support]
 roles:
   support_agent:

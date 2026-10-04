@@ -69,6 +69,7 @@ class Policy(BaseModel):
 
 class World(BaseModel):
     version: str
+    bank_name: str = "Rookvale"
     roles: dict[str, Role]
     customers: dict[str, Customer]
     policies: dict[str, Policy]
@@ -145,6 +146,49 @@ class Layer1Failure(BaseModel):
     check: Literal["wrong_action", "pii_leak", "fabricated_policy", "missing_citation"]
     detail: str
     severity: Literal["critical", "major"]
+
+
+class ChatMessage(BaseModel):
+    role: Literal["system", "user", "assistant"]
+    content: str
+
+
+HumanLeakLabel = Literal["agree", "leak", "clean"]
+
+
+class SessionConfig(BaseModel):
+    """Play / batch session knobs (model + sampling + optional deck / proxy)."""
+    model: str
+    temperature: float = Field(default=0.0, ge=0.0, le=2.0)
+    top_p: float | None = Field(default=None, ge=0.0, le=1.0)
+    max_tokens: int | None = Field(default=None, ge=1)
+    seed: int | None = None
+    deck: str | None = None
+    world_version: str | None = None
+    clawwarden: str | None = None
+
+
+class TurnRecord(BaseModel):
+    index: int
+    user: str
+    assistant: str
+    declared_action: Action | None = None
+    layer1_failures: list[Layer1Failure] = []
+    system_pii_leak: bool = False
+    human_label: HumanLeakLabel | None = None
+
+
+class PlaySession(BaseModel):
+    """Mode B interactive session: player is requester, model is employee."""
+    session_id: str
+    scenario_id: str
+    world_version: str
+    bank_name: str
+    config: SessionConfig
+    opening_task: str
+    system_prompt: str
+    messages: list[ChatMessage] = []
+    turns: list[TurnRecord] = []
 
 
 class JudgeScore(BaseModel):

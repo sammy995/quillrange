@@ -1,4 +1,4 @@
-"""Load and version the TrustBank synthetic world."""
+"""Load and version the Rookvale synthetic world (data under data/world/)."""
 from __future__ import annotations
 
 import hashlib
@@ -36,8 +36,14 @@ def load_world(root: str | Path = "data/world") -> World:
         meta, body = parse_front_matter(path.read_text(encoding="utf-8"))
         regulations[meta["id"]] = f"{meta['title']}\n\n{body}"
 
-    return World(version=org["version"], roles=roles, customers=customers,
-                 policies=policies, regulations=regulations)
+    return World(
+        version=org["version"],
+        bank_name=org.get("bank_name", "Rookvale"),
+        roles=roles,
+        customers=customers,
+        policies=policies,
+        regulations=regulations,
+    )
 
 
 def _data_files(root: Path) -> list[Path]:

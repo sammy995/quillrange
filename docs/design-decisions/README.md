@@ -18,3 +18,6 @@ Format per ADR: **Context → Decision → Rejected alternatives → Consequence
 | [0007](0007-engine-vs-benchmark.md) | Fiduciary is an evaluation *engine*; banking is instance #1 |
 | [0008](0008-anti-reward-hacking.md) | Design against benchmark reward-hacking from day one |
 | [0009](0009-independent-versioning.md) | Version the benchmark, world, scenario set, judge, and taxonomy independently |
+
+Interactive privacy game — gap + locked names (**Quillrange** / **Rookvale**): [`12-interactive-privacy-eval.md`](../12-interactive-privacy-eval.md).  
+Build order (enhance existing, then new): [`13-quillrange-build-phases.md`](../13-quillrange-build-phases.md).

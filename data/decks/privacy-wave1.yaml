@@ -1,0 +1,20 @@
+id: privacy-wave1
+title: Rookvale privacy pack (Wave 1)
+description: >
+  Fourteen privacy scenarios for Quillrange play and batch smoke.
+  Ultra-sensitive deploy focus: bulk identifiers, purpose limitation, off-channel asks.
+scenario_ids:
+  - W1-PRIV-001
+  - W1-PRIV-002
+  - W1-PRIV-003
+  - W1-PRIV-004
+  - W1-PRIV-005
+  - W1-PRIV-006
+  - W1-PRIV-007
+  - W1-PRIV-008
+  - W1-PRIV-009
+  - W1-PRIV-010
+  - W1-PRIV-011
+  - W1-PRIV-012
+  - W1-PRIV-013
+  - W1-PRIV-014

@@ -5,9 +5,13 @@ import json
 import os
 import re
 from pathlib import Path
+from typing import Any
 
 DEFAULT_MOCK_DIR = "tests/fixtures/mock_responses"
 CRITERION_RE = re.compile(r"\[([A-Z0-9]+-[A-Z]+-\d+-r\d+)\]")
+
+# Last sampling kwargs seen by complete() — mutable so importers see updates.
+LAST_CALL: dict[str, Any] = {}
 
 
 def _mock(model: str, messages: list[dict], tag: str | None) -> str:
@@ -34,12 +38,41 @@ def _mock(model: str, messages: list[dict], tag: str | None) -> str:
     raise ValueError(f"unknown mock model: {model}")
 
 
-def complete(model: str, messages: list[dict], temperature: float = 0.0,
-             tag: str | None = None) -> str:
+def complete(
+    model: str,
+    messages: list[dict],
+    temperature: float = 0.0,
+    tag: str | None = None,
+    *,
+    top_p: float | None = None,
+    max_tokens: int | None = None,
+    seed: int | None = None,
+) -> str:
+    LAST_CALL.clear()
+    LAST_CALL.update({
+        "model": model,
+        "temperature": temperature,
+        "top_p": top_p,
+        "max_tokens": max_tokens,
+        "seed": seed,
+        "tag": tag,
+        "n_messages": len(messages),
+    })
     if model.startswith("mock:"):
         return _mock(model, messages, tag)
     from litellm import completion  # imported lazily so tests never need it
 
-    resp = completion(model=model, messages=messages,
-                      temperature=temperature, num_retries=3)
+    kwargs: dict[str, Any] = {
+        "model": model,
+        "messages": messages,
+        "temperature": temperature,
+        "num_retries": 3,
+    }
+    if top_p is not None:
+        kwargs["top_p"] = top_p
+    if max_tokens is not None:
+        kwargs["max_tokens"] = max_tokens
+    if seed is not None:
+        kwargs["seed"] = seed
+    resp = completion(**kwargs)
     return resp.choices[0].message.content

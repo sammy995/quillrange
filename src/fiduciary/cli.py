@@ -7,12 +7,14 @@ from pathlib import Path
 
 from fiduciary.aggregate import build_model_report, score_scenario
 from fiduciary.crosswalk import load_crosswalk, validate_crosswalk
+from fiduciary.decks import DEFAULT_DECK_DIR, load_deck, resolve_deck_scenarios, validate_deck
 from fiduciary.judge import judge_transcript
 from fiduciary.layer1 import run_layer1
 from fiduciary.report import render_leaderboard, render_model_report
 from fiduciary.runner import _safe_model_name, run_scenario, save_transcript, transcript_path
 from fiduciary.scenarios import load_scenarios, validate_scenarios
-from fiduciary.schemas import JudgeScore, ModelReport, ScenarioResult, Transcript
+from fiduciary.schemas import JudgeScore, ModelReport, ScenarioResult, SessionConfig, Transcript
+from fiduciary.session import player_message, save_session, start_scenario
 from fiduciary.reliability import (agreement_metrics, automated_criterion_means,
                                   export_rating_sheets, read_rating_csvs,
                                   render_reliability_report)
@@ -34,12 +36,36 @@ def _select(scenario_dir: str, ids: str | None):
     return scenarios
 
 
+def _session_config_from_args(args) -> SessionConfig:
+    return SessionConfig(
+        model=args.model,
+        temperature=getattr(args, "temperature", 0.0),
+        top_p=getattr(args, "top_p", None),
+        max_tokens=getattr(args, "max_tokens", None),
+        seed=getattr(args, "seed", None),
+        deck=getattr(args, "deck", None),
+    )
+
+
+def _add_sampling_args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--temperature", type=float, default=0.0)
+    p.add_argument("--top-p", dest="top_p", type=float, default=None)
+    p.add_argument("--max-tokens", dest="max_tokens", type=int, default=None)
+    p.add_argument("--seed", type=int, default=None)
+
+
 def cmd_validate(_args) -> int:
     world = load_world(WORLD_ROOT)
     taxonomy = load_taxonomy()
-    problems = validate_scenarios(load_scenarios(SCENARIO_DIR), world, taxonomy)
+    scenarios = load_scenarios(SCENARIO_DIR)
+    problems = validate_scenarios(scenarios, world, taxonomy)
     problems += verify_manifest(WORLD_ROOT)
     problems += validate_crosswalk(load_crosswalk(), taxonomy)
+    for path in sorted(DEFAULT_DECK_DIR.glob("*.yaml")):
+        try:
+            problems += validate_deck(load_deck(path.stem), scenarios)
+        except Exception as e:  # noqa: BLE001 — surface deck load errors in validate
+            problems.append(f"deck {path.name}: {e}")
     for p in problems:
         print(f"PROBLEM: {p}")
     print("OK" if not problems else f"{len(problems)} problem(s)")
@@ -59,12 +85,49 @@ def cmd_run(args) -> int:
         return 1
     world = load_world(WORLD_ROOT)
     run_dir = Path(args.out)
-    for scenario in _select(args.scenarios, args.ids):
-        transcript = run_scenario(world, scenario, args.model)
+    cfg = _session_config_from_args(args)
+    if args.deck:
+        deck = load_deck(args.deck)
+        scenarios = resolve_deck_scenarios(deck, load_scenarios(args.scenarios))
+        cfg.deck = deck.id
+    else:
+        scenarios = _select(args.scenarios, args.ids)
+    for scenario in scenarios:
+        transcript = run_scenario(world, scenario, args.model, config=cfg)
         print(f"ran {scenario.id} -> {save_transcript(transcript, run_dir)}")
-    (run_dir / "run_config.json").write_text(json.dumps(
-        {"model": args.model, "world_version": world.version,
-         "scenario_dir": args.scenarios, "ids": args.ids}, indent=2), encoding="utf-8")
+    (run_dir / "run_config.json").write_text(
+        json.dumps({**cfg.model_dump(), "world_version": world.version,
+                    "scenario_dir": args.scenarios, "ids": args.ids,
+                    "n_scenarios": len(scenarios)}, indent=2),
+        encoding="utf-8",
+    )
+    return 0
+
+
+def cmd_play_turn(args) -> int:
+    """One Mode-B turn: requester message → employee reply → Layer 1 → save session."""
+    world = load_world(WORLD_ROOT)
+    scenarios = {s.id: s for s in load_scenarios(SCENARIO_DIR)}
+    if args.scenario not in scenarios:
+        raise SystemExit(f"unknown scenario {args.scenario!r}")
+    scenario = scenarios[args.scenario]
+    cfg = _session_config_from_args(args)
+    cfg.world_version = world.version
+    out = Path(args.out)
+    session_id = args.session_id or out.name
+    from fiduciary.session import load_session
+
+    session_file = out / session_id / "session.json"
+    if session_file.exists():
+        session = load_session(out, session_id)
+        session.config = cfg
+    else:
+        session = start_scenario(world, scenario, cfg, session_id=session_id)
+    text = args.message if args.message is not None else session.opening_task
+    turn = player_message(world, scenario, session, text)
+    path = save_session(session, out)
+    leak = "LEAK" if turn.system_pii_leak else "clean"
+    print(f"turn {turn.index} system={leak} action={turn.declared_action} -> {path}")
     return 0
 
 
@@ -179,7 +242,19 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out", required=True)
     p.add_argument("--scenarios", default=SCENARIO_DIR)
     p.add_argument("--ids", default=None)
+    p.add_argument("--deck", default=None, help="named deck under data/decks/ (e.g. privacy-wave1)")
+    _add_sampling_args(p)
     p.set_defaults(fn=cmd_run)
+
+    p = sub.add_parser("play-turn", help="one interactive requester turn (Mode B)")
+    p.add_argument("--model", required=True)
+    p.add_argument("--scenario", required=True)
+    p.add_argument("--out", required=True, help="results root directory")
+    p.add_argument("--session-id", dest="session_id", default=None)
+    p.add_argument("--message", default=None, help="requester text; default = scenario opening task")
+    p.add_argument("--deck", default=None)
+    _add_sampling_args(p)
+    p.set_defaults(fn=cmd_play_turn)
 
     p = sub.add_parser("judge")
     p.add_argument("--run", required=True)

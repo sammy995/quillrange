@@ -1,11 +1,12 @@
 cff-version: 1.2.0
-title: "Fiduciary: Enterprise Deployment Readiness Benchmark (TrustBank)"
+title: "Quillrange: deployment-readiness eval for AI in a fictional bank (Rookvale)"
 message: "If you use this benchmark, cite it as below."
 type: software
 authors:
   - family-names: Lagad
     given-names: Shubham
+repository-code: "https://github.com/sammy995/quillrange"
 version: 0.1.0
 date-released: 2026-07-09
-keywords: [AI governance, benchmark, LLM evaluation, banking, deployment readiness]
+keywords: [AI governance, benchmark, LLM evaluation, banking, privacy, deployment readiness]
 license: Apache-2.0

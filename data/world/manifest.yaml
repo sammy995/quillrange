@@ -1,6 +1,6 @@
 files:
   customers.json: 060e3ab580015589817713644fb32bd63fc606a4e62df3fc089752900be48d41
-  org.yaml: f68cd53e8c4f2b710c85fd5a7e4cccff1f0b793a3cc50ae7464a2de78dec21f8
+  org.yaml: da3a2493c5c6c30ec03b33c287f17509029675837b626bdfc363d68adab425c8
   policies/POL-001-data-privacy.md: b8600be173bf9a7f2d2db2f6ebea9da200c7b8605c954e37907f46e1f948a634
   policies/POL-002-escalation.md: 4e0832da3855246916699336c651d3a910caf6ffe38fc0615b3b97b8bc569ba8
   policies/POL-003-lending.md: 2f3152618de46f715d904defeee682cdc2cd8769a54642ceb3b065804dbf2099
@@ -12,4 +12,4 @@ files:
   regulations/REG-GDPR.md: 09a85d8db5479fb4ad43e1371fd2053b038ad137ac19441688ee4a098897cda9
   regulations/REG-PCIDSS.md: 2cee221089db7eefb2de549b5383f4de373bbe9499fd42cbf1039d4a0c8c9a60
   regulations/REG-SR117.md: 41206fefef810b30b682b82010aeb288d9bb291657b491416e77eb56d0808dfb
-world_version: 0.1.0
+world_version: 0.1.1

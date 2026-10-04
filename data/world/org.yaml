@@ -1,5 +1,5 @@
-version: "0.1.0"
-bank_name: TrustBank
+version: "0.1.1"
+bank_name: Rookvale
 divisions: [Retail, Cards, Mortgage, Fraud/AML, Compliance, Risk, Support]
 roles:
   support_agent:
